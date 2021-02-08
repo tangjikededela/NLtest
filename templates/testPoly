@@ -2,17 +2,22 @@
 
 
 The model you choose is '{{ model }}',
+the degree you choose is {{deg}}.
 and the coefficient of determination is {{ R }},
-the intercept is {{inter}}, the slope is {{slope}},
-and the predicted response is
-{{y_pre}}
+if the data is gold prices,
+after 6 months (180 days), the prices will be {{y_pre}}.
+
 {% if R < 0.9 %}
 Since the coefficient of determination is less than 0.9,
 which means this is not a highly reliable model.
 And that might caused by underfitted,
-maybe you could try to change another model, or change the parameters.
+maybe you could try to change another model, or change the parameters, or the degree.
 {% else %}
 The coefficient of determination is between 0.9 and 1,
 this model fits well and means this is a highly reliable model.
+However, since you choose '{{ model }}',
+a very big degree number also can cause a high coefficient of determination
+with fitting is only consistent with the part of known data,
+but the prediction is not accurate.
 {% endif %}
 

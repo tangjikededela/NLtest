@@ -1,0 +1,41 @@
+{% macro CI(R) %}{{R}} CI{% endmacro -%}
+{% macro CI(rho) %}{{rho}} CI{% endmacro -%}
+{% macro CI(tau) %}{{tau}} CI{% endmacro -%}
+
+The model's details you choose are:
+'{{ model }}',
+the slope is {{slope}},
+which means when independent variable increase 1,
+the controlled variable will change {{slope}}.
+The p values is {{p_value}},
+the Standard error is {{std_err}}.
+And the coefficient of determination is {{ R }},
+the Spearman correlation coefficient is {{rho}},
+the Kendall's tau is {{tau}}.
+{% if R < 0.9 %}
+Since the coefficient of determination is less than 0.9,
+which means this is not a highly reliable model.
+And that might caused by underfitted,
+maybe you could try to change another model, or change the parameters.
+{% else %}
+The coefficient of determination is between 0.9 and 1,
+this model fits well and means this is a highly reliable model.
+{% endif %}
+{% if tau > 0.5 and tau < 1.0 %}
+Since the Kendall's tau is between 0.5 and 1,
+which means this is the two variables have strong agreement.
+{% elif tau < -0.5 and tau > -1.0 %}
+The Kendall's tau is between -0.5 and -1,
+which means this is the two variables have strong disagreement.
+{% else %}
+The Kendall's tau is between -0.5 and 0.5.
+That means the two variables do not have either strong agreement or strong disagreement.
+{% endif %}
+{% if rho < 0.5 and rho >-0.5%}
+Since the Spearman correlation coefficient is between than -0.5 and 0.5,
+which means the correlation is not so high.
+{% elif rho > 0.5 %}
+Since the Spearman correlations is close to +1 which mean there is an exact monotonic relationship.
+{% else %}
+Since the Spearman correlations is close to -1 which mean there is an exact monotonic relationship.
+{% endif %}
