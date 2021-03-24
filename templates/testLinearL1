@@ -1,0 +1,34 @@
+{% macro CI(R) %}{{R}} CI{% endmacro -%}
+{% macro CI(R) %}{{p}} CI{% endmacro -%}
+{% macro CI(R) %}{{p2}} CI{% endmacro -%}
+{% macro CI(R) %}{{slope}} CI{% endmacro -%}
+
+The model you choose is '{{ model }}' which means
+which means each time when {{Xcol}} increase by 1,
+the {{ycol}} will always change by {{slope}}.
+
+After some mathematical calculation and verification,
+{% if R < 0.8 %}
+they show this is not a highly reliable model.
+Maybe you could try to change another model.
+{% elif R < 0.9 and R > 0.8%}
+they show this is a highly reliable model.
+{% else %}
+they show this is a very highly reliable model.
+{% endif %}
+{% if p2.all() == nan %}
+It also shows that the relationship between {{ycol}} and {{Xcol}} is a very common phenomenon,
+not because this group of data is special.
+{% elif pd1 ==1 %}
+It also shows the relationship between {{ycol}} and {{Xcol}} is not a common phenomenon at all.
+{% elif pd2 ==1 %}
+It also shows that the relationship between {{ycol}} and {{Xcol}} may be not a common phenomenon.
+{% elif pd3 ==1 %}
+It also shows the relationship between {{ycol}} and some of {{Xcol}} is not a very common phenomenon.
+{% elif pd4 ==1 %}
+It also shows that the relationship between {{ycol}} and some of {{Xcol}} may be not a common phenomenon.
+{% else %}
+It also shows that the relationship between {{ycol}} and {{Xcol}} is a very common phenomenon,
+not because this group of data is special.
+{% endif %}
+If you want to know more about this model, you can try to improved your user's level.

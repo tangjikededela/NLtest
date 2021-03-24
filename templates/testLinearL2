@@ -1,0 +1,62 @@
+{% macro CI(R) %}{{R}} CI{% endmacro -%}
+{% macro CI(R) %}{{p}} CI{% endmacro -%}
+{% macro CI(R) %}{{p2}} CI{% endmacro -%}
+{% macro CI(R) %}{{slope}} CI{% endmacro -%}
+{% macro CI(R) %}{{pd1}} CI{% endmacro -%}
+{% macro CI(R) %}{{pd2}} CI{% endmacro -%}
+{% macro CI(R) %}{{pd3}} CI{% endmacro -%}
+{% macro CI(R) %}{{pd4}} CI{% endmacro -%}
+
+The model you choose is '{{ model }}',
+If you try to make a prediction model that predicts how {{ycol}} will change when {{Xcol}} increase
+this will be a good choice.
+The intercept is {{inter}}, which means when {{Xcol}} is 0,
+the {{ycol}} will be {{inter}}, but consider about {{Xcol}} may not be 0,
+it may have no practical significance.
+The slope is {{slope}}, which means each time when {{Xcol}} increase 1,
+the {{ycol}} will change {{slope}}.
+
+The std error is {{sd}},
+and the p - value is
+{{p}}.
+And the coefficient of determination is {{ R }},
+{% if R < 0.8 %}
+Since the coefficient of determination is less than 0.8,
+which means this is not a highly reliable model.
+And that might be caused by under fitted,
+maybe you could try to change another model, or change the parameters.
+{% elif R < 0.9 and R > 0.8%}
+Since the coefficient of determination is between 0.8 and 0.9,
+which means this is a highly reliable model.
+{% else %}
+The coefficient of determination is between 0.9 and 1,
+this model fits well and means this is a highly reliable model.
+{% endif %}
+{% if p2.all() == nan %}
+The p - value is very small which almost is 0, so it is statistically significant,
+which means the relationship between {{ycol}} and {{Xcol}} is a very common phenomenon,
+not because this group of data is special.
+{% elif pd1 ==1 %}
+Since all of the p - value is bigger than 0.07,
+this is not statistically significant,
+which means the relationship between {{ycol}} and {{Xcol}} is not a very common phenomenon.
+{% elif pd2 ==1 %}
+Since all of the p - value is bigger than usual significance level of 0.05,
+this might is not statistically significant,
+which means the relationship between {{ycol}} and {{Xcol}} is might not a very common phenomenon.
+{% elif pd3 ==1 %}
+Since some of the p - value is bigger than 0.07,
+this is not statistically significant,
+which means the relationship between {{ycol}} and some of {{Xcol}} is not a very common phenomenon.
+{% elif pd4 ==1 %}
+Since some of the p - value is bigger than usual significance level of 0.05,
+this might is not statistically significant,
+which means the relationship between {{ycol}} and some of {{Xcol}} is might not a very common phenomenon.
+{% else %}
+All p - value is less than 0.05 which is very small, so it is statistically significant,
+which means the relationship between {{ycol}} and {{Xcol}} is a very common phenomenon,
+not because this group of data is special.
+{% endif %}
+If you want to know more about whether the regression model fits well,
+please check some other information on the short summary above,
+also you can improved your user level for more information.

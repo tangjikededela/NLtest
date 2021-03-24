@@ -1,0 +1,26 @@
+{% macro CI(R) %}{{R}} CI{% endmacro -%}
+
+
+The model you choose is '{{ model }}',
+and the coefficient of determination is {{ R }},
+if the data is gold prices, the prices predictions will be
+{{y_pre}}.
+{% if R < 90 and R > 80 %}
+Since the coefficient of determination is between 0.8 and 0.9,
+which means this is a reliable model,
+but maybe you could try to change the parameters to improve it.
+{% elif R < 80 and R > 70  %}
+Since the coefficient of determination is between 0.7 and 0.8,
+which means this is not a very highly reliable model,
+however since this is ARIMA model which is more complex, so it still is useable.
+maybe you could try to change another model, or change the parameters.
+{% elif R < 70  %}
+Since the coefficient of determination is lower than 0.7,
+which means this is not a highly reliable model,
+maybe you could try to change another model, or change the parameters.
+{% else %}
+The coefficient of determination is between 0.9 and 1,
+this model fits well and means this is a highly reliable model.
+{% endif %}
+For more details information, you can check above SARIMAX Results.
+

@@ -1,0 +1,20 @@
+{% macro CI(R) %}{{R}} CI{% endmacro -%}
+{% macro CI(R) %}{{p}} CI{% endmacro -%}
+{% macro CI(R) %}{{p2}} CI{% endmacro -%}
+{% macro CI(R) %}{{slope}} CI{% endmacro -%}
+
+What this model doing is try to make a classification  model that determine if {{ycol}}
+by changing {{Xcol}},
+After some mathematical calculation and verification,
+it finds {{CF}}
+{% if Accuracy < 0.8 %}
+However, it shows this is not a highly reliable model.
+Maybe you could try to change another model.
+{% elif Accuracy < 0.9 and Accuracy > 0.8%}
+Also, it shows this is a highly reliable model.
+{% else %}
+Also, it shows this is a very highly reliable model.
+{% endif %}
+The precision is {{Precision}},
+which means when the model predicted {{ycol}} ,
+that patients have {{Precision}} of the time.

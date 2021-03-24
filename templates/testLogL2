@@ -1,0 +1,35 @@
+{% macro CI(R) %}{{R}} CI{% endmacro -%}
+{% macro CI(R) %}{{p}} CI{% endmacro -%}
+{% macro CI(R) %}{{p2}} CI{% endmacro -%}
+{% macro CI(R) %}{{slope}} CI{% endmacro -%}
+
+The model you choose is '{{ model }}',
+If you try to make a classification  model that determine if {{ycol}}
+by changing {{Xcol}},
+this will be a good choice.
+The coefficient(s) is {{cof}},
+which means {{CF}}
+There is a heatmap shows,
+You can check if the classification is accurate or not.
+Well, you got a classification rate of {{Accuracy}}.
+{% if Accuracy < 0.8 %}
+it shows this is not a highly reliable model.
+Maybe you could try to change another model.
+{% elif Accuracy < 0.9 and Accuracy > 0.8%}
+it shows this is a highly reliable model.
+{% else %}
+it shows this is a very highly reliable model.
+{% endif %}
+The precision is {{Precision}},
+which means when your Logistic Regression model predicted {{ycol}} ,
+that patients have {{Precision}} of the time.
+Another it finds
+{% if AUC < 0.7 %}
+this is not a highly reliable classifier.
+{% elif AUC < 0.8 and AUC > 0.7%}
+this may is a useable classifier.
+{% elif AUC < 0.9 and AUC > 0.8%}
+this is a highly reliable classifier.
+{% else %}
+this is a almost perfect classifier.
+{% endif %}

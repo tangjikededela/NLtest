@@ -4,16 +4,33 @@ from jinja2 import Template
 import os
 import scipy.stats
 import matplotlib.pyplot as plt
+from sklearn.model_selection import learning_curve
+from scipy import stats
+from sklearn import metrics
+import seaborn as sns
+from sklearn.model_selection import train_test_split
 
 _here = os.path.dirname(os.path.abspath(__file__))
-test1_tmpl_path = os.path.join(_here, 'templates', 'testLinear')
+test1_l1_tmpl_path = os.path.join(_here, 'templates', 'testLinearL1')
+test1_l2_tmpl_path = os.path.join(_here, 'templates', 'testLinearL2')
+test1_l3_tmpl_path = os.path.join(_here, 'templates', 'testLinearL3')
 test2_tmpl_path = os.path.join(_here, 'templates', 'testStats')
 test3_tmpl_path = os.path.join(_here, 'templates', 'testPoly')
 test4_tmpl_path = os.path.join(_here, 'templates', 'testScipy')
-TEST1_TMPL = Template(open(test1_tmpl_path).read())
+test5_tmpl_path = os.path.join(_here, 'templates', 'testARIMA')
+test6_l1_tmpl_path = os.path.join(_here, 'templates', 'testLogL1')
+test6_l2_tmpl_path = os.path.join(_here, 'templates', 'testLogL2')
+test6_l3_tmpl_path = os.path.join(_here, 'templates', 'testLogL3')
+TEST1_l1_TMPL = Template(open(test1_l1_tmpl_path).read())
+TEST1_l2_TMPL = Template(open(test1_l2_tmpl_path).read())
+TEST1_l3_TMPL = Template(open(test1_l3_tmpl_path).read())
 TEST2_TMPL = Template(open(test2_tmpl_path).read())
 TEST3_TMPL = Template(open(test3_tmpl_path).read())
 TEST4_TMPL = Template(open(test4_tmpl_path).read())
+TEST5_TMPL = Template(open(test5_tmpl_path).read())
+TEST6_l1_TMPL = Template(open(test6_l1_tmpl_path).read())
+TEST6_l2_TMPL = Template(open(test6_l2_tmpl_path).read())
+TEST6_l3_TMPL = Template(open(test6_l3_tmpl_path).read())
 
 
 class Summary:
@@ -23,15 +40,189 @@ class Summary:
     def summary(self, m):
 
         if "LinearRegression()" in str(m):
-            summary = TEST1_TMPL.render(
-                model=m,
-                R=r_sq,
-                inter=model.intercept_,
-                slope=model.coef_,
-                y_pre=y_pred,
-            )
-            return summary
-        elif "statsmodels" in str(m):
+            modelfit = LinearRegression().fit(X, y)
+            print(str(type(X)))
+            if "ndarray" in str(type(X)):
+                plt.plot(X, y, '.', label='original data')
+                plt.plot(X, modelfit.predict(X), 'r', label='linear fitted line')
+                plt.legend()
+                plt.show()
+            if level == 1:
+                lm = LinearRegression()
+                lm.fit(X, y)
+                params = np.append(lm.intercept_, lm.coef_)
+                predictions = lm.predict(X)
+
+                newX = pd.DataFrame({"Constant": np.ones(len(X))}).join(pd.DataFrame(X))
+                MSE = (sum((y - predictions) ** 2)) / (len(newX) - len(newX.columns))
+
+                var_b = MSE * (np.linalg.inv(np.dot(newX.T, newX)).diagonal())
+                sd_b = np.sqrt(var_b)
+                ts_b = params / sd_b
+
+                # p_values = [2 * (1 - stats.t.cdf(np.abs(i), (len(newX) - len(newX[0])))) for i in ts_b]
+                sd_b = np.round(sd_b, 3)
+                ts_b = np.round(ts_b, 3)
+                # p_values = np.round(p_values, 3)
+                X2 = sm.add_constant(X)
+                est = sm.OLS(y, X2)
+                est2 = est.fit()
+                p_determine1 = 0
+                p_determine2 = 0
+                p_determine3 = 0
+                p_determine4 = 0
+                if all(i >= 0.07 for i in est2.pvalues) is True:
+                    p_determine1 = 1
+                elif all(i >= 0.05 for i in est2.pvalues) is True:
+                    p_determine2 = 1
+                elif any(i >= 0.07 for i in est2.pvalues) is True:
+                    p_determine3 = 1
+                elif any(i >= 0.05 for i in est2.pvalues) is True:
+                    p_determine4 = 1
+
+                print(est2.summary())
+
+                summary = TEST1_l3_TMPL.render(
+                    model=m,
+                    R=modelfit.score(X, y),
+                    inter=modelfit.intercept_,
+                    slope=modelfit.coef_,
+                    y_pre=modelfit.predict(X),
+                    Xcol=XcolName,
+                    ycol=ycolName,
+                    sd=sd_b,
+                    t=ts_b,
+                    p=est2.pvalues,
+                    p2=np.round(est2.pvalues, 3),
+                    pd1=p_determine1,
+                    pd2=p_determine2,
+                    pd3=p_determine3,
+                    pd4=p_determine4,
+                )
+                return summary
+            elif level == 2:
+                lm = LinearRegression()
+                lm.fit(X, y)
+                params = np.append(lm.intercept_, lm.coef_)
+                predictions = lm.predict(X)
+
+                newX = pd.DataFrame({"Constant": np.ones(len(X))}).join(pd.DataFrame(X))
+                MSE = (sum((y - predictions) ** 2)) / (len(newX) - len(newX.columns))
+
+                var_b = MSE * (np.linalg.inv(np.dot(newX.T, newX)).diagonal())
+                sd_b = np.sqrt(var_b)
+                ts_b = params / sd_b
+
+                sd_b = np.round(sd_b, 3)
+                ts_b = np.round(ts_b, 3)
+                # p_values = np.round(p_values, 3)
+                X2 = sm.add_constant(X)
+                est = sm.OLS(y, X2)
+                est2 = est.fit()
+                p_determine1 = 0
+                p_determine2 = 0
+                p_determine3 = 0
+                p_determine4 = 0
+                if all(i >= 0.07 for i in est2.pvalues) is True:
+                    p_determine1 = 1
+                elif all(i >= 0.05 for i in est2.pvalues) is True:
+                    p_determine2 = 1
+                elif any(i >= 0.07 for i in est2.pvalues) is True:
+                    p_determine3 = 1
+                elif any(i >= 0.05 for i in est2.pvalues) is True:
+                    p_determine4 = 1
+
+                print(est2.summary())
+
+                summary = TEST1_l3_TMPL.render(
+                    model=m,
+                    R=modelfit.score(X, y),
+                    inter=modelfit.intercept_,
+                    slope=modelfit.coef_,
+                    y_pre=modelfit.predict(X),
+                    Xcol=XcolName,
+                    ycol=ycolName,
+                    sd=sd_b,
+                    t=ts_b,
+                    p=est2.pvalues,
+                    p2=np.round(est2.pvalues, 3),
+                    pd1=p_determine1,
+                    pd2=p_determine2,
+                    pd3=p_determine3,
+                    pd4=p_determine4,
+                )
+                return summary
+            else:
+                if "ndarray" in str(type(X)):
+                    train_sizes, train_score, test_score = learning_curve(model, X, y,
+                                                                          train_sizes=np.linspace(.5, 1, 8), cv=15,
+                                                                          scoring='neg_mean_squared_error')
+                    train_error = 1 - np.mean(train_score, axis=1)
+                    test_error = 1 - np.mean(test_score, axis=1)
+                    plt.plot(train_sizes, train_error, 'o-', color='r', label='training')
+                    plt.plot(train_sizes, test_error, 'o-', color='g', label='testing')
+                    plt.legend(loc='best')
+                    plt.xlabel('traing examples')
+                    plt.ylabel('error')
+                    img = plt.imread('templates\pic.jpg')
+                    fig = plt.figure('show picture')
+                    plt.imshow(img)
+                    plt.show()
+
+                lm = LinearRegression()
+                lm.fit(X, y)
+                params = np.append(lm.intercept_, lm.coef_)
+                predictions = lm.predict(X)
+
+                newX = pd.DataFrame({"Constant": np.ones(len(X))}).join(pd.DataFrame(X))
+                MSE = (sum((y - predictions) ** 2)) / (len(newX) - len(newX.columns))
+
+                var_b = MSE * (np.linalg.inv(np.dot(newX.T, newX)).diagonal())
+                sd_b = np.sqrt(var_b)
+                ts_b = params / sd_b
+
+                # p_values = [2 * (1 - stats.t.cdf(np.abs(i), (len(newX) - len(newX[0])))) for i in ts_b]
+
+                sd_b = np.round(sd_b, 3)
+                ts_b = np.round(ts_b, 3)
+                # p_values = np.round(p_values, 3)
+                X2 = sm.add_constant(X)
+                est = sm.OLS(y, X2)
+                est2 = est.fit()
+                p_determine1 = 0
+                p_determine2 = 0
+                p_determine3 = 0
+                p_determine4 = 0
+                if all(i >= 0.07 for i in est2.pvalues) is True:
+                    p_determine1 = 1
+                elif all(i >= 0.05 for i in est2.pvalues) is True:
+                    p_determine2 = 1
+                elif any(i >= 0.07 for i in est2.pvalues) is True:
+                    p_determine3 = 1
+                elif any(i >= 0.05 for i in est2.pvalues) is True:
+                    p_determine4 = 1
+
+                print(est2.summary())
+
+                summary = TEST1_l3_TMPL.render(
+                    model=m,
+                    R=modelfit.score(X, y),
+                    inter=modelfit.intercept_,
+                    slope=modelfit.coef_,
+                    y_pre=modelfit.predict(X),
+                    Xcol=XcolName,
+                    ycol=ycolName,
+                    sd=sd_b,
+                    t=ts_b,
+                    p=est2.pvalues,
+                    p2=np.round(est2.pvalues, 3),
+                    pd1=p_determine1,
+                    pd2=p_determine2,
+                    pd3=p_determine3,
+                    pd4=p_determine4,
+                )
+                return summary
+        elif "statsmodels.api" in str(m):
             summary = TEST2_TMPL.render(
                 model=m,
                 R=model.fit().rsquared,
@@ -75,6 +266,100 @@ class Summary:
                 tau=scipy.stats.kendalltau(x, y)[0],
             )
             return summary
+        elif "ARIMA" in str(m):
+            residuals = DataFrame(model_fit.resid)
+            print(residuals.describe())
+            print(model_fit.summary())
+            # evaluate forecasts
+            rmse = sqrt(mean_squared_error(test, predictions))
+            # plot forecasts against actual outcomes
+            pyplot.plot(test)
+            pyplot.plot(predictions, color='red')
+            pyplot.show()
+            summary = TEST5_TMPL.render(
+                model=m,
+                R=rmse,
+                y_pre=predictions,
+            )
+            return summary
+        elif "LogisticRegression" in str(m):
+            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=0)
+            model.fit(X_train, y_train)
+            y_pred = model.predict(X_test)
+
+            cnf_matrix = metrics.confusion_matrix(y_test, y_pred)
+            # plt.plot(X, y, '.', label='original data')
+            # plt.plot(X, model.predict(X), '+', label='linear fitted line')
+            # plt.legend()
+            # plt.show()
+            if level !=1:
+                # Heatmap
+                class_names = [0, 1]  # name  of classes
+                fig, ax = plt.subplots()
+                tick_marks = np.arange(len(class_names))
+                plt.xticks(tick_marks, class_names)
+                plt.yticks(tick_marks, class_names)
+                # Create heatmap
+                sns.heatmap(pd.DataFrame(cnf_matrix), annot=True, cmap="YlGnBu", fmt='g')
+                ax.xaxis.set_label_position("top")
+                plt.tight_layout()
+                plt.title('Confusion matrix', y=1.1)
+                plt.ylabel('Actual label')
+                plt.xlabel('Predicted label')
+                plt.show()
+            # ROC
+            y_pred_proba = model.predict_proba(X_test)[::, 1]
+            fpr, tpr, _ = metrics.roc_curve(y_test, y_pred_proba)
+            auc = metrics.roc_auc_score(y_test, y_pred_proba)
+            if level == 3:
+                plt.plot(fpr, tpr, label="data, auc=" + str(auc))
+                plt.legend(loc=4)
+                plt.show()
+
+            COEF=np.hsplit(model.coef_, np.size(model.coef_))
+            CoefFactor=""
+            for i in range(np.size(model.coef_)):
+                if COEF[i]<0:
+                    CoefFactor = CoefFactor+XcolName[i]+" is negative correlation."+"\n"+"which means the higher the" + XcolName[i] +" is, the lower possibility of " +ycolName+"\n"
+                else:
+                    CoefFactor = CoefFactor+XcolName[i]+" is positive correlation."+"\n"+"which means the higher the" + XcolName[i] +" is, the higher possibility of " +ycolName+"\n"
+
+            if level == 1:
+                summary = TEST6_l1_TMPL.render(
+                    model=m,
+                    cof=model.coef_,
+                    CF=CoefFactor,
+                    Accuracy=metrics.accuracy_score(y_test, y_pred),
+                    Precision=metrics.precision_score(y_test, y_pred),
+                    Xcol=XcolName,
+                    ycol=ycolName,
+                    AUC=auc,
+                )
+                return summary
+            elif level ==2:
+                summary = TEST6_l2_TMPL.render(
+                    model=m,
+                    cof=model.coef_,
+                    CF=CoefFactor,
+                    Accuracy=metrics.accuracy_score(y_test, y_pred),
+                    Precision=metrics.precision_score(y_test, y_pred),
+                    Xcol=XcolName,
+                    ycol=ycolName,
+                    AUC=auc,
+                )
+                return summary
+            elif level ==3:
+                summary = TEST6_l3_TMPL.render(
+                    model=m,
+                    cof=model.coef_,
+                    CF=CoefFactor,
+                    Accuracy=metrics.accuracy_score(y_test, y_pred),
+                    Precision=metrics.precision_score(y_test, y_pred),
+                    Xcol=XcolName,
+                    ycol=ycolName,
+                    AUC=auc,
+                )
+                return summary
 
 
 # Example 1
@@ -116,39 +401,135 @@ class Summary:
 # Example 6
 import math
 import pandas as pd
+from statsmodels.tsa.stattools import acf, pacf
+import statsmodels.api as sm
+import matplotlib.pyplot as plt
+import numpy as np
 
-data = pd.read_csv("GoldPrice.csv")
+from pandas import datetime
+from pandas import read_csv
+from pandas import DataFrame
+from statsmodels.tsa.arima.model import ARIMA
+from matplotlib import pyplot
 
-data["Date"] = pd.to_datetime(data["Date"])
-data = data.replace([np.inf, -np.inf], np.nan)
-data = data.fillna(method='ffill')
-data.head()
-i = 0
-y = pd.Series([])
-for n in range(0, data.shape[0]):
-    y[i] = data.loc[n]["Price"]
-    i = i + 1
+# model = scipy.stats.linregress(x, y)
+# example6 = Summary()
+# print(example6.summary(model))
 
-i = 0
-j = data.shape[0] - 1
-n = math.floor(data.shape[0] / 2)
+# model = "numpy.polyfit"
+# p = np.poly1d(np.polyfit(x, y, 6))
+# example7 = Summary()
+# print(example7.summary(model))
 
-for n in range(0, n):
-    temp1 = y[i]
-    temp2 = y[j]
-    y[i] = temp2
-    y[j] = temp1
-    i = i + 1
-    j = j - 1
+# Example 8
+# from pandas import read_csv
+# from pandas import datetime
+# from pandas import DataFrame
+# from matplotlib import pyplot
+# from statsmodels.tsa.arima.model import ARIMA
+# from sklearn.metrics import mean_squared_error
+# from pandas.plotting import autocorrelation_plot
+# from math import sqrt
+# # load dataset
+# def parser(x):
+#     return datetime.strptime('20' + x, '%Y-%m')
+#
+# series = read_csv('gold2.csv', header=0, index_col=0, parse_dates=True, squeeze=True, date_parser=parser)
+# series.index = series.index.to_period('M')
+# # series.plot()
+# # series.diff(1).plot()
+# # autocorrelation_plot(series)
+# # pyplot.show()
+# # split into train and test sets
+# X = series.values
+# size = int(len(X) * 0.66)
+# train, test = X[0:size], X[size:len(X)]
+# history = [x for x in train]
+# predictions = list()
+# # walk-forward validation
+# for t in range(len(test)):
+#     model = ARIMA(history, order=(20, 1, 1))
+#     model_fit = model.fit()
+#     output = model_fit.forecast()
+#     yhat = output[0]
+#     predictions.append(yhat)
+#     obs = test[t]
+#     history.append(obs)
+#     # print('predicted=%f, expected=%f' % (yhat, obs))
+# example8 = Summary()
+# print(example8.summary(model))
 
-x = pd.Series(range(data.shape[0]))
+# Example 9
+# from sklearn.linear_model import LogisticRegression
+# from sklearn.metrics import classification_report, confusion_matrix
+# x = np.arange(10).reshape(-1, 1)
+# y = np.array([0, 0, 0, 0, 1, 1, 1, 1, 1, 1])
+# model = LogisticRegression(solver='liblinear', random_state=0)
+# model.fit(x, y)
+# classes=model.classes_
+# intercept=model.intercept_
+# cof=model.coef_
+# model.predict_proba(x)
+# model.predict(x)
 
-model = scipy.stats.linregress(x, y)
-example6 = Summary()
-print(example6.summary(model))
+# # Example 10
+#
+# data = read_csv('HW.csv')
+#
+# colName = list(data.columns)
+#
+# X = data.Height
+# XcolName = colName[0]
+# y = data.Weight
+# ycolName = colName[1]
+# X, y = np.array(X).reshape(-1, 1), np.array(y)
+# level = 3
+# model = LinearRegression()
+#
+# example10 = Summary()
+# print(example10.summary(model))
+# print()
 
+# # Example 11
+# import pandas as pd
+# import statsmodels.api as sm
+#
+# Stock_Market = {
+#     'Year': [2017, 2017, 2017, 2017, 2017, 2017, 2017, 2017, 2017, 2017, 2017, 2017, 2016, 2016, 2016, 2016, 2016, 2016,
+#              2016, 2016, 2016, 2016, 2016, 2016],
+#     'Month': [12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1],
+#     'Interest_Rate': [2.75, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.25, 2.25, 2.25, 2, 2, 2, 1.75, 1.75, 1.75, 1.75, 1.75, 1.75,
+#                       1.75, 1.75, 1.75, 1.75, 1.75],
+#     'Unemployment_Rate': [5.3, 5.3, 5.3, 5.3, 5.4, 5.6, 5.5, 5.5, 5.5, 5.6, 5.7, 5.9, 6, 5.9, 5.8, 6.1, 6.2, 6.1, 6.1,
+#                           6.1, 5.9, 6.2, 6.2, 6.1],
+#     'Stock_Index_Price': [1464, 1394, 1357, 1293, 1256, 1254, 1234, 1195, 1159, 1167, 1130, 1075, 1047, 965, 943, 958,
+#                           971, 949, 884, 866, 876, 822, 704, 719]
+# }
+#
+# df = pd.DataFrame(Stock_Market, columns=['Year', 'Month', 'Interest_Rate', 'Unemployment_Rate', 'Stock_Index_Price'])
+#
+# X = df[['Interest_Rate',
+#         'Unemployment_Rate']]
+# y = df['Stock_Index_Price']
+# colName = list(df.columns)
+#
+# XcolName = colName[2] + " & " + colName[3]
+# ycolName = colName[4]
+# model = LinearRegression()
+# level = 2
+# example11 = Summary()
+# print(example11.summary(model))
 
-model = "numpy.polyfit"
-p = np.poly1d(np.polyfit(x, y, 6))
-example7 = Summary()
-print(example7.summary(model))
+#Example 12
+from sklearn.linear_model import LogisticRegression
+col_names = ['pregnant', 'glucose', 'bp', 'skin', 'insulin', 'bmi', 'pedigree', 'age', 'label']
+pima = pd.read_csv("diabetes.csv", header=None, names=col_names)
+feature_cols = ['pregnant', 'insulin', 'bmi', 'age','glucose','bp','pedigree']
+X = pima[feature_cols] # Features
+y = pima.label # Target variable
+XcolName=feature_cols
+ycolName="get diabetes"
+model = LogisticRegression(solver='lbfgs', max_iter=1000)
+level = 2
+example12 = Summary()
+print(example12.summary(model))
