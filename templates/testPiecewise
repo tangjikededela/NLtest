@@ -1,0 +1,61 @@
+{% macro CI(R) %}{{change1}} CI{% endmacro -%}
+{% macro CI(R) %}{{change2}} CI{% endmacro -%}
+{% macro CI(R) %}{{change3}} CI{% endmacro -%}
+{% macro CI(R) %}{{CD}} CI{% endmacro -%}
+
+You made a piecewise model for the data,
+which means there are some break points in the data,
+and you can use different models to fit them.
+
+The first model you choose is {{model1}},
+In this part, the {{ycol}} change {{change1}} during {{Xcol}} increase.
+{% if change1 < CD and change1 > -CD %}
+Which means the {{ycol}} does not change much, and it is stable in this part.
+{% elif change1 < 0 %}
+Which means the {{ycol}} decrease when {{Xcol}} increase.
+{% elif change1 > 0 %}
+Which means the {{ycol}} increase when {{Xcol}} increase.
+{% endif %}
+
+The sceond model you choose is {{model2}},
+In this part, the {{ycol}} change {{change2}} during {{Xcol}} increase.
+{% if change2 < CD and change2 > -CD %}
+Which means the {{ycol}} does not change much, and it is stable in this part.
+{% elif change2 < 0 %}
+Which means the {{ycol}} decrease when {{Xcol}} increase.
+{% elif change2 > 0 %}
+Which means the {{ycol}} increase when {{Xcol}} increase.
+{% endif %}
+
+The sceond model you choose is {{model3}},
+In this part, the {{ycol}} change {{change3}} during {{Xcol}} increase.
+{% if change3 < CD and change3 > -CD %}
+Which means the {{ycol}} does not change much, and it is stable in this part.
+{% elif change3 < 0 %}
+Which means the {{ycol}} decrease when {{Xcol}} increase.
+{% elif change3 > 0 %}
+Which means the {{ycol}} increase when {{Xcol}} increase.
+{% endif %}
+
+In summary, the realationship between {{ycol}} and {{Xcol}} is,
+{% if change1 < CD and change1 > -CD %}
+the {{ycol}} does not change much in the beginning.
+{% elif change1 < 0 %}
+the {{ycol}} decrease when {{Xcol}} increase in the beginning.
+{% elif change1 > 0 %}
+the {{ycol}} increase when {{Xcol}} increase in the beginning.
+{% endif %}
+{% if change2 < CD and change2 > -CD %}
+and then the {{ycol}} keeps stable for a while.
+{% elif change2 < 0 %}
+and then the {{ycol}} decrease when {{Xcol}} increase.
+{% elif change2 > 0 %}
+and then the {{ycol}} increase when {{Xcol}} increase.
+{% endif %}
+{% if change3 < CD and change3 > -CD %}
+In the end, the {{ycol}} become stable, and does not change much.
+{% elif change3 < 0 %}
+In the end, the {{ycol}} decrease as {{Xcol}} increase.
+{% elif change3 > 0 %}
+In the end, the {{ycol}} increase as {{Xcol}} increase.
+{% endif %}

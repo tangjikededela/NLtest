@@ -4,8 +4,6 @@
 The model you choose is '{{ model }}',
 the degree you choose is {{deg}}.
 and the coefficient of determination is {{ R }},
-if the data is gold prices,
-after 6 months (180 days), the prices will be {{y_pre}}.
 
 {% if R < 0.9 %}
 Since the coefficient of determination is less than 0.9,

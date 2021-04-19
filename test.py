@@ -9,6 +9,8 @@ from scipy import stats
 from sklearn import metrics
 import seaborn as sns
 from sklearn.model_selection import train_test_split
+from GPyOpt.methods import BayesianOptimization
+
 
 _here = os.path.dirname(os.path.abspath(__file__))
 test1_l1_tmpl_path = os.path.join(_here, 'templates', 'testLinearL1')
@@ -21,6 +23,10 @@ test5_tmpl_path = os.path.join(_here, 'templates', 'testARIMA')
 test6_l1_tmpl_path = os.path.join(_here, 'templates', 'testLogL1')
 test6_l2_tmpl_path = os.path.join(_here, 'templates', 'testLogL2')
 test6_l3_tmpl_path = os.path.join(_here, 'templates', 'testLogL3')
+test7_tmpl_path = os.path.join(_here, 'templates', 'testPiecewise')
+test8_tmpl_path = os.path.join(_here, 'templates', 'testPiecewisePwlf')
+test9_tmpl_path = os.path.join(_here, 'templates', 'testPiecewisePwlfSummary')
+test10_tmpl_path = os.path.join(_here, 'templates', 'testPiecewisePwlfV2')
 TEST1_l1_TMPL = Template(open(test1_l1_tmpl_path).read())
 TEST1_l2_TMPL = Template(open(test1_l2_tmpl_path).read())
 TEST1_l3_TMPL = Template(open(test1_l3_tmpl_path).read())
@@ -31,6 +37,10 @@ TEST5_TMPL = Template(open(test5_tmpl_path).read())
 TEST6_l1_TMPL = Template(open(test6_l1_tmpl_path).read())
 TEST6_l2_TMPL = Template(open(test6_l2_tmpl_path).read())
 TEST6_l3_TMPL = Template(open(test6_l3_tmpl_path).read())
+TEST7_TMPL = Template(open(test7_tmpl_path).read())
+TEST8_TMPL = Template(open(test8_tmpl_path).read())
+TEST9_TMPL = Template(open(test9_tmpl_path).read())
+TEST10_TMPL = Template(open(test10_tmpl_path).read())
 
 
 class Summary:
@@ -41,7 +51,7 @@ class Summary:
 
         if "LinearRegression()" in str(m):
             modelfit = LinearRegression().fit(X, y)
-            print(str(type(X)))
+
             if "ndarray" in str(type(X)):
                 plt.plot(X, y, '.', label='original data')
                 plt.plot(X, modelfit.predict(X), 'r', label='linear fitted line')
@@ -232,7 +242,7 @@ class Summary:
             )
             return summary
         elif "polyfit" in str(m):
-            xp = np.linspace(-10, int(data.shape[0] * 1.1), int(data.shape[0] * 1.1))
+
             plt.plot(x, y, '.', label='original data')
             plt.plot(xp, p(xp), '-', label='fitted line')
             yhat = p(x)
@@ -282,6 +292,129 @@ class Summary:
                 y_pre=predictions,
             )
             return summary
+        elif "piecewise" in str(m):
+
+            summary = TEST7_TMPL.render(
+                model1=model1,
+                model2=model2,
+                model3=model3,
+                Xcol=xcolname,
+                ycol=ycolname,
+                change1=change1,
+                change2=change2,
+                change3=change3,
+                CD=ChangeDetermine,
+
+            )
+            return summary
+        elif "PiecewiseLinFit" in str(m):
+            my_pwlf=m
+            def my_obj(x):
+                # define some penalty parameter l
+                # you'll have to arbitrarily pick this
+                # it depends upon the noise in your data,
+                # and the value of your sum of square of residuals
+                l = y.mean() * 0.001
+                f = np.zeros(x.shape[0])
+                for i, j in enumerate(x):
+                    my_pwlf.fit(j[0])
+                    f[i] = my_pwlf.ssr + (l * j[0])
+                return f
+
+            # define the lower and upper bound for the number of line segments
+            bounds = [{'name': 'var_1', 'type': 'discrete',
+                       'domain': np.arange(2, 10)}]
+
+            np.random.seed(12121)
+
+            myBopt = BayesianOptimization(my_obj, domain=bounds, model_type='GP',
+                                          initial_design_numdata=10,
+                                          initial_design_type='latin',
+                                          exact_feval=True, verbosity=True,
+                                          verbosity_model=False)
+            max_iter = 30
+
+            # perform the bayesian optimization to find the optimum number
+            # of line segments
+            myBopt.run_optimization(max_iter=max_iter, verbosity=True)
+
+            # print('\n \n Opt found \n')
+            # print('Optimum number of line segments:', myBopt.x_opt)
+            # print('Function value:', myBopt.fx_opt)
+            myBopt.plot_acquisition()
+            myBopt.plot_convergence()
+
+            # perform the fit for the optimum
+            BP = my_pwlf.fit(myBopt.x_opt)
+            slopes = my_pwlf.calc_slopes()
+            BPNumber = int(myBopt.x_opt[0])
+            print(BPNumber)
+            print(BP)
+            print(slopes)
+
+            # predict for the determined points
+            xHat = np.linspace(min(x), max(x), num=1000)
+            yHat = my_pwlf.predict(xHat)
+
+            # plot the results
+            plt.figure()
+            plt.plot(x, y, 'o')
+            plt.plot(xHat, yHat, '-')
+            plt.show()
+            increasePart=" "
+            decreasePart=" "
+            notchangePart=" "
+            maxIncrease=" "
+            maxDecrease=" "
+            for i in range(BPNumber):
+                # print("the x change is", BP[i + 1] - BP[i])
+                # print("the y change is", int(my_pwlf.predict(BP[i + 1]) - my_pwlf.predict(BP[i])))
+                # print("the slope is", slopes[i])
+                if slopes[i] < 0:
+                    decreasePart= decreasePart+"from "+str(np.round(BP[i], 2))+" till "+str(np.round(BP[i+1], 2)) + ", "
+                    if slopes[i] == min(slopes):
+                        maxDecrease = str(np.round(BP[i], 2))+" till "+str(np.round(BP[i+1], 2))
+                elif slopes[i] > 0:
+                    increasePart = increasePart +"from "+ str(np.round(BP[i], 2)) + " till "+str(np.round(BP[i+1], 2)) + ", "
+                    if slopes[i] == max(slopes):
+                        maxIncrease = str(np.round(BP[i], 2))+" till "+str(np.round(BP[i+1], 2))
+                else:
+                    notchangePart = notchangePart +"from "+ str(np.round(BP[i], 2)) + " till "+str(np.round(BP[i+1], 2)) + ", "
+                summary = TEST8_TMPL.render(
+                    ychange=abs(my_pwlf.predict(BP[i + 1]) - my_pwlf.predict(BP[i])),
+                    Xchange=BP[i + 1] - BP[i],
+                    slope=slopes[i],
+                    Xcol=xcolname,
+                    ycol=ycolname,
+                    n=i+1,
+                )
+                print(summary)
+            print("In summary, ")
+            for i in range(BPNumber):
+                CD=abs(max(y)-min(y))
+                summary = TEST9_TMPL.render(
+                    ychange=abs(my_pwlf.predict(BP[i + 1]) - my_pwlf.predict(BP[i])),
+                    Xchange=BP[i + 1] - BP[i],
+                    slope=slopes[i],
+                    Xcol=xcolname,
+                    ycol=ycolname,
+                    n=i+1,
+                    end=BPNumber,
+                    CD=CD,
+                )
+                print(summary)
+            summary = TEST10_TMPL.render(
+                iP=increasePart,
+                dP=decreasePart,
+                nP=notchangePart,
+                Xcol=xcolname,
+                ycol=ycolname,
+                n=BPNumber,
+                mI=maxIncrease,
+                mD=maxDecrease,
+            )
+            print(summary)
+
         elif "LogisticRegression" in str(m):
             X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=0)
             model.fit(X_train, y_train)
@@ -395,6 +528,7 @@ class Summary:
 # Example 5
 # model = "numpy.polyfit"
 # p = np.poly1d(np.polyfit(x, y, 3))
+# xp = np.linspace(-10, int(data.shape[0] * 1.1), int(data.shape[0] * 1.1))
 # example5 = Summary()
 # print(example5.summary(model))
 
@@ -521,15 +655,133 @@ from matplotlib import pyplot
 # print(example11.summary(model))
 
 #Example 12
-from sklearn.linear_model import LogisticRegression
-col_names = ['pregnant', 'glucose', 'bp', 'skin', 'insulin', 'bmi', 'pedigree', 'age', 'label']
-pima = pd.read_csv("diabetes.csv", header=None, names=col_names)
-feature_cols = ['pregnant', 'insulin', 'bmi', 'age','glucose','bp','pedigree']
-X = pima[feature_cols] # Features
-y = pima.label # Target variable
-XcolName=feature_cols
-ycolName="get diabetes"
-model = LogisticRegression(solver='lbfgs', max_iter=1000)
-level = 2
-example12 = Summary()
-print(example12.summary(model))
+# from sklearn.linear_model import LogisticRegression
+# col_names = ['pregnant', 'glucose', 'bp', 'skin', 'insulin', 'bmi', 'pedigree', 'age', 'label']
+# pima = pd.read_csv("diabetes.csv", header=None, names=col_names)
+# feature_cols = ['pregnant', 'insulin', 'bmi', 'age','glucose','bp','pedigree']
+# X = pima[feature_cols] # Features
+# y = pima.label # Target variable
+# XcolName=feature_cols
+# ycolName="get diabetes"
+# model = LogisticRegression(solver='lbfgs', max_iter=1000)
+# level = 3
+# example12 = Summary()
+# print(example12.summary(model))
+
+# Example 13 对多段函数寻找断点，手动拟合
+import matplotlib.pyplot as plt
+import ruptures as rpt
+data = np.genfromtxt('windspeed.csv',delimiter=',',skip_header=1)
+data = data[data[:,1].argsort()]
+signal = data[:,1:3]
+x=data[:,1]
+y=data[:,2]
+
+
+
+# #algo = rpt.BottomUp(model="linear").fit(signal)
+# #algo = rpt.KernelCPD(kernel="linear").fit(signal) one point correct
+# #algo = rpt.Binseg(model="linear").fit(signal)
+# #algo = rpt.Window(width=7600, model="linear").fit(signal)
+# result = algo.predict(n_bkps=2)
+# print(result)
+# rpt.display(signal, result)
+# plt.show()
+# first = signal[:result[0],:2]
+# second = signal[result[0]:result[1]:2]
+# thrid=signal[result[1]:,:2]
+# x1,y1=first[:,:1],first[:,1:2]
+# x2,y2=second[:,:1],second[:,1:2]
+# x3,y3=thrid[:,:1],thrid[:,1:2]
+#
+# model2="numpy.polyfit"
+# plt.plot(x, y, '.', label='original data')
+# model1="LinearRegression()"
+# modelfit1 = LinearRegression().fit(x1, y1)
+# plt.plot(x1, modelfit1.predict(x1), 'r', label='Linear fitted line 1')
+# p = np.poly1d(np.polyfit(x2.ravel(), y2.ravel(), 3))
+# xp = np.linspace(x2[0], x2[x2.size-1] , x2.size)
+# plt.plot(xp, p(xp), '-', label='Polynomial fitted line 2')
+# model3="LinearRegression()"
+# modelfit3 = LinearRegression().fit(x3, y3)
+# plt.plot(x3, modelfit3.predict(x3), 'y', label='Linear fitted line 3')
+#
+# plt.legend()
+# plt.show()
+#
+# ChangeDetermine=(max(y)-min(y))/100
+# change1=y1[y1.size-1]-y1[0]
+# change2=y2[y2.size-1]-y2[0]
+# change3=y3[y3.size-1]-y3[0]
+# xcolname="Wind Speed"
+# ycolname="Theoretical Energy"
+# model="piecewise"
+#
+# example13 = Summary()
+# print(example13.summary(model))
+
+# Example 14 对多段函数寻找断点，自动拟合
+import pwlf
+# x0 = np.array([min(x), x[result[0]],x[result[1]], max(x)])
+#
+# # initialize piecewise linear fit with your x and y data
+# my_pwlf = pwlf.PiecewiseLinFit(x, y)
+#
+# # fit the data with the specified break points
+# # (ie the x locations of where the line segments
+# # will terminate)
+# my_pwlf.fit_with_breaks(x0)
+#
+# # predict for the determined points
+# xHat = np.linspace(min(x), max(x), num=10000)
+# yHat = my_pwlf.predict(xHat)
+#
+# # plot the results
+# plt.figure()
+# plt.plot(x, y, 'o')
+# plt.plot(xHat, yHat, '-')
+# plt.show()
+#
+# my_pwlf = pwlf.PiecewiseLinFit(x, y)
+#
+# # fit the data for four line segments
+# res = my_pwlf.fit(len(result))
+#
+# # predict for the determined points
+# xHat = np.linspace(min(x), max(x), num=5000)
+# yHat = my_pwlf.predict(xHat)
+#
+# # plot the results
+# plt.figure()
+# plt.plot(x, y, 'o')
+# plt.plot(xHat, yHat, '-')
+# plt.show()
+
+import numpy as np
+import pwlf
+col_names = ['month', 'AvocadoAveragePrice']
+data = pd.read_csv("avocado.csv", header=None, names=col_names)
+x = data.month # Features
+y = data.AvocadoAveragePrice # Target variable
+# x = np.array([4., 5., 6., 7., 8.,9.,10.,11.])
+# y = np.array([11., 13., 16., 28.92, 42.81,52.8,62.8,72.8])
+# xcolname="day"
+# ycolname="money"
+xcolname="month"
+ycolname="Avocado Average Price"
+
+# my_pwlf = pwlf.PiecewiseLinFit(x, y)
+# breaks = my_pwlf.fit_guess([6.0])
+# xHat = np.linspace(min(x), max(x), num=5000)
+# yHat = my_pwlf.predict(xHat)
+# plt.figure()
+# plt.plot(x, y, 'o')
+# plt.plot(xHat, yHat, '-')
+# plt.show()
+
+
+my_pwlf = pwlf.PiecewiseLinFit(x, y)
+
+example14 = Summary()
+print(example14.summary(my_pwlf))
+

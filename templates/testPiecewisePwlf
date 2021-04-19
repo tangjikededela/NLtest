@@ -1,0 +1,13 @@
+{% macro CI(R) %}{{ychange}} CI{% endmacro -%}
+{% macro CI(R) %}{{slope}} CI{% endmacro -%}
+{% macro CI(R) %}{{Xchange}} CI{% endmacro -%}
+{% macro CI(R) %}{{n}} CI{% endmacro -%}
+
+In the part {{n}}, the {{ycol}} total change {{ychange}} during {{Xcol}} increase {{Xchange}}.
+{% if slope > 0 %}
+In detail, every time when {{Xcol}} increase 1, {{ycol}} increase {{slope}}.
+{% elif slope < 0 %}
+In detail, every time when {{Xcol}} increase 1, {{ycol}} decrease {{slope}}.
+{% else %}
+Which means the {{ycol}} is very stable during this part.
+{% endif %}

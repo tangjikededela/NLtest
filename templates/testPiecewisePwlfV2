@@ -1,0 +1,25 @@
+{% macro CI(R) %}{{dP}} CI{% endmacro -%}
+{% macro CI(R) %}{{nP}} CI{% endmacro -%}
+{% macro CI(R) %}{{iP}} CI{% endmacro -%}
+{% macro CI(R) %}{{n}} CI{% endmacro -%}
+
+There is total {{n-1}} breakpoints find from the data which about
+how {{ycol}} change by increasing {{Xcol}}.
+{% if iP != " " %}
+In detail, when {{Xcol}} in range{{iP}},
+the {{ycol}} will increase.
+It is important to note that {{Xcol}} from {{mI}} the {{ycol}} increase fast than other parts.
+{% else %}
+The data shows that {{ycol}} always has an downward trend with the growth of {{Xcol}}.
+{% endif %}
+{% if dP != " " %}
+It is also easy to see that when {{Xcol}} in range{{dP}},
+the {{ycol}} will decrease.
+It is important to note that {{Xcol}} from {{mD}} the {{ycol}} decrease fast than other parts.
+{% else %}
+And the data shows that {{ycol}} always has an upward trend with the growth of {{Xcol}}.
+{% endif %}
+{% if nP != " " %}
+In the end, when {{Xcol}} in range{{nP}},
+the {{ycol}} is stable, will not change.
+{% endif %}

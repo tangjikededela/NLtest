@@ -1,0 +1,57 @@
+{% macro CI(R) %}{{ychange}} CI{% endmacro -%}
+{% macro CI(R) %}{{slope}} CI{% endmacro -%}
+{% macro CI(R) %}{{Xchange}} CI{% endmacro -%}
+{% macro CI(R) %}{{n}} CI{% endmacro -%}
+{% macro CI(R) %}{{end}} CI{% endmacro -%}
+{% macro CI(R) %}{{CD}} CI{% endmacro -%}
+
+{% if n == 1%}
+{% if slope > 0 and ychange > CD/10 %}
+In the beginning, the {{ycol}} increase fast as {{Xcol}} increase.
+{% elif slope > 0 and ychange > CD/100 %}
+In the beginning, the {{ycol}} increase slow as {{Xcol}} increase.
+{% elif slope > 0 and ychange < CD/100 %}
+In the beginning, the {{ycol}} increase a little as {{Xcol}} increase.
+{% elif ychange == 0 %}
+In the beginning, the {{ycol}} is very table does not change at all.
+{% elif slope < 0 and ychange > CD/10 %}
+In the beginning, the {{ycol}} decrease fast as {{Xcol}} increase.
+{% elif slope < 0 and ychange > CD/100 %}
+In the beginning, the {{ycol}} decrease slow as {{Xcol}} increase.
+{% elif slope < 0 and ychange < CD/100 %}
+In the beginning, the {{ycol}} decrease a little as {{Xcol}} increase.
+{% endif %}
+{% elif n!= end %}
+{% if slope > 0 and ychange > CD/10 %}
+And then, the {{ycol}} increase fast while {{Xcol}} increase.
+{% elif slope > 0 and ychange > CD/100 %}
+And then, the {{ycol}} increase slow while {{Xcol}} increase.
+{% elif slope > 0 and ychange < CD/100 %}
+And then, the {{ycol}} increase a little while {{Xcol}} increase.
+{% elif ychange == 0 %}
+And then, the {{ycol}} is very table for a while.
+{% elif slope < 0 and ychange > CD/10 %}
+And then, the {{ycol}} decrease fast while {{Xcol}} increase.
+{% elif slope < 0 and ychange > CD/100 %}
+And then, the {{ycol}} decrease slow while {{Xcol}} increase.
+{% elif slope < 0 and ychange < CD/100 %}
+And then, the {{ycol}} decrease a little while {{Xcol}} increase.
+{% endif %}
+{% elif n == end %}
+{% if slope > 0 and ychange > CD/10 %}
+In the end, the {{ycol}} increase fast when {{Xcol}} increase.
+{% elif slope > 0 and ychange > CD/100 %}
+In the end, the {{ycol}} increase slow when {{Xcol}} increase.
+{% elif slope > 0 and ychange < CD/100 %}
+In the end, the {{ycol}} increase a little when {{Xcol}} increase.
+{% elif ychange == 0 %}
+In the end, the {{ycol}} become very table and does not change anymore.
+{% elif slope < 0 and ychange > CD/10 %}
+In the end, the {{ycol}} decrease fast when {{Xcol}} increase.
+{% elif slope < 0 and ychange > CD/100 %}
+In the end, the {{ycol}} decrease slow when {{Xcol}} increase.
+{% elif slope < 0 and ychange < CD/100 %}
+In the end, the {{ycol}} decrease a little when {{Xcol}} increase.
+{% endif %}
+{% endif %}
+
